@@ -1,51 +1,89 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"net/url"
+	"strings"
 )
 
-// searchCmd represents the search command
-var searchCmd = &cobra.Command{
-	Use:   "search",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("search called")
-	},
-}
+var Site string
 
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	// Here you will define your flags and configuration settings.
+	searchCmd.Flags().BoolP("exact", "e", false, "results for exact query, e.g. cats --exact")
+	searchCmd.Flags().StringVarP(&Site, "site", "s", "", "site to query directly, e.g. cats --site aspca.org")
+	searchCmd.Flags().BoolP("title", "t", false, "page title includes the query, e.g. cats --title")
+	searchCmd.Flags().BoolP("url", "u", false, "page URL includes the query, e.g. cats --url")
+	searchCmd.Flags().BoolP("news", "n", false, "returns news about the query, e.g. cincinnati --news")
+	searchCmd.Flags().BoolP("map", "m", false, "returns map results about the query, e.g. cincinnati --map")
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// searchCmd.PersistentFlags().String("foo", "", "A help for foo")
+// searchCmd represents the search command
+var searchCmd = &cobra.Command{
+	Use:   "search",
+	Short: "Use this command to supply a query",
+	Long: `This command is what you will use to search DuckDuckGo. Simply enter what you wish to search following the search command and duck will query for you. Output will be the first 10 link results, structured as such:
+[0] PAGE TITLE : LINK
+To visit a link, simply press the number corresponding with the link.
+There are a number of flags available to fine-tune search results.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		exactSwitch, _ := cmd.Flags().GetBool("exact")
+		siteSwitch, _ := cmd.Flags().GetString("site")
+		titleSwitch, _ := cmd.Flags().GetBool("title")
+		urlSwitch, _ := cmd.Flags().GetBool("url")
+		newsSwitch, _ := cmd.Flags().GetBool("news")
+		mapSwitch, _ := cmd.Flags().GetBool("map")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// searchCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+		switch {
+		case exactSwitch:
+			fmt.Println("exact")
+		case siteSwitch != "":
+			fmt.Println(siteSwitch)
+		case titleSwitch:
+			fmt.Println("title")
+		case urlSwitch:
+			fmt.Println("url")
+		case newsSwitch:
+			fmt.Println("news")
+		case mapSwitch:
+			fmt.Println("map")
+		}
+		query := parseQuery(args)
+		url := generateURL(query)
+		fmt.Println(url.String())
+	},
+}
+
+func search(query string) {
+
+}
+
+/* TODO complete
+func searchExact(query string) {}
+
+func searchTitle(query string) {}
+
+func searchURL(query string)  {}
+
+func searchNews(query string) {}
+
+func searchMaps(query string) {}
+ */
+
+func parseQuery(args []string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " "))
+
+	return query
+}
+
+func generateURL(query string) *url.URL {
+	baseUrl, _ := url.Parse("https://html.duckduckgo.com")
+	baseUrl.Path += "/html"
+	params := url.Values{}
+	params.Add("q", query)
+	baseUrl.RawQuery = params.Encode()
+
+	return baseUrl
 }
