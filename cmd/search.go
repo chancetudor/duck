@@ -60,30 +60,35 @@ There are a number of flags available to fine-tune search results.`,
 		*/
 
 		query 				= parseQuery(args)
-		fmt.Println(query) // test code TODO remove
 		url 				:= generateURL(query)
-		fmt.Println(url.String()) // test code TODO remove
+		fmt.Println(url.String())
 		results 			:= search(url)
-		printResults(results)
+		printResults(&results)
 	},
 }
 
-func printResults(results []soup.Root) {
-	for i := 0; i < len(results); i = i + 1 {
-		fmt.Printf("[%d] ", i)
-		resultTitle := results[i].Find("a", "class", "result__a")
-		fmt.Println(resultTitle.Text())
+func printResults(results *[]soup.Root) {
+	for i := 0; i < len(*results); i = i + 1 {
+		fmt.Printf("{[i}]")
+		//fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
 	}
 }
 
 func search(url *url.URL) []soup.Root {
+	fmt.Println("in search")
 	resp, err 				:= soup.Get(url.String())
 	if err != nil {
 		fmt.Println("An error has occurred fetching the results. Exiting.")
 		log.Fatal(err)
 	}
 	doc 					:= soup.HTMLParse(resp)
+	// TODO FIX ERROR HERE
 	results 				:= doc.FindAll("div", "class", "links_main links_deep result__body")
+	println(len(results))
+	for i := 0; i < len(results); i++ {
+		fmt.Printf("{[i}]")
+		fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
+	}
 
 	return results
 }
