@@ -63,25 +63,32 @@ There are a number of flags available to fine-tune search results.`,
 		url 				:= generateURL(query)
 		fmt.Println(url.String())
 		results 			:= search(url)
-		printResults(results)
+		printResults(&results)
 	},
 }
 
-func printResults(results []soup.Root) {
-	for i := 0; i < len(results); i = i + 1 {
-		fmt.Printf("[%d] ", i)
-		fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
+func printResults(results *[]soup.Root) {
+	for i := 0; i < len(*results); i = i + 1 {
+		fmt.Printf("{[i}]")
+		//fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
 	}
 }
 
 func search(url *url.URL) []soup.Root {
+	fmt.Println("in search")
 	resp, err 				:= soup.Get(url.String())
 	if err != nil {
 		fmt.Println("An error has occurred fetching the results. Exiting.")
 		log.Fatal(err)
 	}
 	doc 					:= soup.HTMLParse(resp)
+	// TODO FIX ERROR HERE
 	results 				:= doc.FindAll("div", "class", "links_main links_deep result__body")
+	println(len(results))
+	for i := 0; i < len(results); i++ {
+		fmt.Printf("{[i}]")
+		fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
+	}
 
 	return results
 }
