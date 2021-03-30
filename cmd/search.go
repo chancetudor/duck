@@ -60,8 +60,9 @@ There are a number of flags available to fine-tune search results.`,
 		*/
 
 		query 				= parseQuery(args)
+		fmt.Println(query) // test code TODO remove
 		url 				:= generateURL(query)
-		fmt.Println(url.String())
+		fmt.Println(url.String()) // test code TODO remove
 		results 			:= search(url)
 		printResults(results)
 	},
@@ -70,7 +71,8 @@ There are a number of flags available to fine-tune search results.`,
 func printResults(results []soup.Root) {
 	for i := 0; i < len(results); i = i + 1 {
 		fmt.Printf("[%d] ", i)
-		fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
+		resultTitle := results[i].Find("a", "class", "result__a")
+		fmt.Println(resultTitle.Text())
 	}
 }
 
