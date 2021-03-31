@@ -2,14 +2,60 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/anaskhan96/soup"
 	"github.com/spf13/cobra"
 	"log"
 	"net/url"
+	"net/http"
 	"strings"
 )
 
 var Site string
+
+// TODO IMPLEMENT
+func printResults(results []string) {}
+
+func search(url *url.URL) /*[]soup.Root*/ {
+	fmt.Println("in search")
+	resp, err := http.Get(url.String())
+	if err != nil {
+		fmt.Println("ERROR : ", err.Error())
+		log.Fatal(err)
+	}
+
+
+
+
+
+	// return results
+}
+
+/* TODO complete
+func searchExact(query string) {}
+
+func searchTitle(query string) {}
+
+func searchURL(query string)  {}
+
+func searchNews(query string) {}
+
+func searchMaps(query string) {}
+*/
+
+func parseQuery(args []string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " "))
+
+	return query
+}
+
+func generateURL(query string) *url.URL {
+	baseUrl, _ 				:= url.Parse("https://html.duckduckgo.com")
+	baseUrl.Path += "/html"
+	params 					:= url.Values{}
+	params.Add("q", query)
+	baseUrl.RawQuery 		= params.Encode()
+
+	return baseUrl
+}
 
 func init() {
 	rootCmd.AddCommand(searchCmd)
@@ -24,6 +70,7 @@ func init() {
 }
 
 // searchCmd represents the search command
+// the main function for this file
 var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Use this command to supply a query",
@@ -62,61 +109,8 @@ There are a number of flags available to fine-tune search results.`,
 		query 				= parseQuery(args)
 		url 				:= generateURL(query)
 		fmt.Println(url.String())
-		results 			:= search(url)
-		printResults(&results)
+		search(url)
+		// results 			:= search(url)
+		// printResults(results)
 	},
-}
-
-func printResults(results *[]soup.Root) {
-	for i := 0; i < len(*results); i = i + 1 {
-		fmt.Printf("{[i}]")
-		//fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
-	}
-}
-
-func search(url *url.URL) []soup.Root {
-	fmt.Println("in search")
-	resp, err 				:= soup.Get(url.String())
-	if err != nil {
-		fmt.Println("An error has occurred fetching the results. Exiting.")
-		log.Fatal(err)
-	}
-	doc 					:= soup.HTMLParse(resp)
-	// TODO FIX ERROR HERE
-	results 				:= doc.FindAll("div", "class", "links_main links_deep result__body")
-	println(len(results))
-	for i := 0; i < len(results); i++ {
-		fmt.Printf("{[i}]")
-		fmt.Println(results[i].Text(), " :", results[i].Attrs()["href"])
-	}
-
-	return results
-}
-
-/* TODO complete
-func searchExact(query string) {}
-
-func searchTitle(query string) {}
-
-func searchURL(query string)  {}
-
-func searchNews(query string) {}
-
-func searchMaps(query string) {}
- */
-
-func parseQuery(args []string) string {
-	query := fmt.Sprintf(strings.Join(args[:], " "))
-
-	return query
-}
-
-func generateURL(query string) *url.URL {
-	baseUrl, _ 				:= url.Parse("https://html.duckduckgo.com")
-	baseUrl.Path += "/html"
-	params 					:= url.Values{}
-	params.Add("q", query)
-	baseUrl.RawQuery 		= params.Encode()
-
-	return baseUrl
 }
