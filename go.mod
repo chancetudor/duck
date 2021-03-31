@@ -8,4 +8,5 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
+	golang.org/x/net v0.0.0-20210330230544-e57232859fb2 // indirect
 )

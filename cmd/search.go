@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"net/url"
+	"golang.org/x/net/html"
 	"net/http"
 	"strings"
 )
@@ -22,6 +23,27 @@ func search(url *url.URL) /*[]soup.Root*/ {
 		log.Fatal(err)
 	}
 
+	// THIS CODE WORKS TO FIND LINKS
+	// TODO EXTEND TO FIND LINKS AND TEXT
+	// TODO EXTEND TO RUN CONCURRENTLY 😉
+	z := html.NewTokenizer(resp.Body)
+
+	for {
+		tt := z.Next()
+
+		switch {
+		case tt == html.ErrorToken:
+			// End of the document, we're done
+			return
+		case tt == html.StartTagToken:
+			t := z.Token()
+
+			isAnchor := t.Data == "a"
+			if isAnchor {
+				fmt.Println("We found a link!")
+			}
+		}
+	}
 
 
 
