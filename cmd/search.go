@@ -1,15 +1,24 @@
+/* 🦆
+
+©️Chance Tudor, 2021
+Licensed under GPL v3.0 -- https://www.gnu.org/licenses/gpl-3.0.en.html
+View the code, edit the code, run the code
+
+ */
 package cmd
 
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"log"
-	"net/url"
 	"golang.org/x/net/html"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
+
+// this var stores the site to query when fed the -s flag
 var Site string
 
 // TODO IMPLEMENT
@@ -63,12 +72,16 @@ func searchNews(query string) {}
 func searchMaps(query string) {}
 */
 
+
+// parses the query given as a string
 func parseQuery(args []string) string {
 	query := fmt.Sprintf(strings.Join(args[:], " "))
 
 	return query
 }
 
+
+// generates a URL from the query given
 func generateURL(query string) *url.URL {
 	baseUrl, _ 				:= url.Parse("https://html.duckduckgo.com")
 	baseUrl.Path += "/html"
@@ -79,10 +92,10 @@ func generateURL(query string) *url.URL {
 	return baseUrl
 }
 
+// inits search command (for Cobra) and adds flags to fine-tune search command
+// each flag corresponds to standard DDG search syntax
 func init() {
 	rootCmd.AddCommand(searchCmd)
-	// flags to fine-tune search command
-	// each flag corresponds to standard DDG search syntax
 	searchCmd.Flags().BoolP("exact", "e", false, "results for exact query, e.g. cats --exact")
 	searchCmd.Flags().BoolP("title", "t", false, "page title includes the query, e.g. cats --title")
 	searchCmd.Flags().BoolP("url", "u", false, "page URL includes the query, e.g. cats --url")
