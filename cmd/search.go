@@ -31,25 +31,24 @@ func search(url *url.URL) /*[]soup.Root*/ {
 		fmt.Println("ERROR : ", err.Error())
 		log.Fatal(err)
 	}
+	resp.Close = true
+	defer resp.Body.Close()
 
-	// THIS CODE WORKS TO FIND LINKS
-	// TODO EXTEND TO FIND LINKS AND TEXT
-	// TODO EXTEND TO RUN CONCURRENTLY 😉
-	z := html.NewTokenizer(resp.Body)
-
+	htmlTokens := html.NewTokenizer(resp.Body)
+loop:
 	for {
-		tt := z.Next()
-
-		switch {
-		case tt == html.ErrorToken:
-			// End of the document, we're done
-			return
-		case tt == html.StartTagToken:
-			t := z.Token()
-
-			isAnchor := t.Data == "a"
-			if isAnchor {
-				fmt.Println("We found a link!")
+		tt := htmlTokens.Next()
+		fmt.Printf("%T", tt)
+		switch tt {
+		case html.ErrorToken:
+			fmt.Println("End")
+			break loop
+		case html.TextToken:
+			fmt.Println(tt)
+		case html.StartTagToken:
+			t := htmlTokens.Token()
+			if t.Data == "a" {
+				fmt.Println("We found an anchor!")
 			}
 		}
 	}
