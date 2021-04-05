@@ -35,21 +35,38 @@ func search(url *url.URL) /*[]soup.Root*/ {
 	defer resp.Body.Close()
 
 	htmlTokens := html.NewTokenizer(resp.Body)
-loop:
+	loop:
 	for {
 		tt := htmlTokens.Next()
-		fmt.Printf("%T", tt)
+		// t := htmlTokens.Token()
+		// fmt.Println(t.Data)
 		switch tt {
 		case html.ErrorToken:
 			fmt.Println("End")
 			break loop
-		case html.TextToken:
-			fmt.Println(tt)
 		case html.StartTagToken:
-			t := htmlTokens.Token()
-			if t.Data == "a" {
-				fmt.Println("We found an anchor!")
+			linkToken := htmlTokens.Token()
+			if linkToken.Data == "a" && linkToken.Attr[0].Val == "result__snippet" {
+				fmt.Println("START link!")
+				fmt.Println(linkToken.Attr[1].Val)
+				fmt.Println(linkToken.String())
+				fmt.Println(htmlTokens.Raw())
+
+				/*
+				t := htmlTokens.Next()
+				_ = t.String()
+				t2 := htmlTokens.Token()
+				fmt.Println(t2.Data)
+
+				t3 := htmlTokens.Next()
+				_ = t3.String()
+				t4 := htmlTokens.Token()
+				fmt.Println(t4.Data)
+				 */
 			}
+		//case html.TextToken:
+		//	t := htmlTokens.Token()
+		//	fmt.Println(t.Data)
 		}
 	}
 
