@@ -9,10 +9,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/gocolly/colly/v2"
 	"github.com/spf13/cobra"
-	"golang.org/x/net/html"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -21,59 +20,47 @@ import (
 // this var stores the site to query when fed the -s flag
 var Site string
 
+// this is a struct to store a result containing a Title and Link to print to stdio
+type Result struct {
+	Title string
+	Link string
+}
+
 // TODO IMPLEMENT
-func printResults(results []string) {}
-
-func search(url *url.URL) /*[]soup.Root*/ {
-	fmt.Println("in search")
-	resp, err := http.Get(url.String())
-	if err != nil {
-		fmt.Println("ERROR : ", err.Error())
-		log.Fatal(err)
-	}
-	resp.Close = true
-	defer resp.Body.Close()
-
-	htmlTokens := html.NewTokenizer(resp.Body)
-	loop:
-	for {
-		tt := htmlTokens.Next()
-		// t := htmlTokens.Token()
-		// fmt.Println(t.Data)
-		switch tt {
-		case html.ErrorToken:
-			fmt.Println("End")
-			break loop
-		case html.StartTagToken:
-			linkToken := htmlTokens.Token()
-			if linkToken.Data == "a" && linkToken.Attr[0].Val == "result__snippet" {
-				fmt.Println("START link!")
-				fmt.Println(linkToken.Attr[1].Val)
-				fmt.Println(linkToken.String())
-				fmt.Println(htmlTokens.Raw())
-
-				/*
-				t := htmlTokens.Next()
-				_ = t.String()
-				t2 := htmlTokens.Token()
-				fmt.Println(t2.Data)
-
-				t3 := htmlTokens.Next()
-				_ = t3.String()
-				t4 := htmlTokens.Token()
-				fmt.Println(t4.Data)
-				 */
-			}
-		//case html.TextToken:
-		//	t := htmlTokens.Token()
-		//	fmt.Println(t.Data)
+func printResults(results []Result) {
+	for i := range results {
+		if i == len(results) - 1 {
+			fmt.Println(results[i].Title, " | ", results[i].Link)
+		} else {
+			fmt.Println(results[i].Title, " | ", results[i].Link, "\n")
 		}
 	}
+}
 
+func search(url string) []Result {
+	var results []Result
+	collect := colly.NewCollector()
+	collect.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		if e.Attr("class") == "result__a" {
+			link := cleanLink(e.Attr("href"))
+			title := e.Text
+			results = append(results, Result{title, link})
+		}
+	})
+	_ = collect.Visit(url)
 
+	return results
+}
 
+func cleanLink(dirtyLink string) string {
+	// get rid of dumb DDG additions before the good stuff
+	cleanerLink := dirtyLink[25:]
+	cleanLink, err := url.PathUnescape(cleanerLink)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// return results
+	return cleanLink
 }
 
 /* TODO complete
@@ -159,9 +146,7 @@ There are a number of flags available to fine-tune search results.`,
 
 		query 				= parseQuery(args)
 		url 				:= generateURL(query)
-		fmt.Println(url.String())
-		search(url)
-		// results 			:= search(url)
-		// printResults(results)
+		results 			:= search(url.String())
+		printResults(results)
 	},
 }
