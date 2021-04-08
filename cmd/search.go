@@ -13,9 +13,11 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"net/url"
+	"os/exec"
+	"runtime"
+	"strconv"
 	"strings"
 )
-
 
 // this var stores the site to query when fed the -s flag
 var Site string
@@ -26,13 +28,41 @@ type Result struct {
 	Link string
 }
 
-// TODO IMPLEMENT
+func openBrowser(url string) {
+	var cmd string
+	args := []string{url}
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	case "windows":
+		cmd = "rundll32"
+		args = []string{"url.dll,FileProtocolHandler", url}
+	default: // "linux", "freebsd", "openbsd", "netbsd"
+		cmd = "xdg-open"
+	}
+	err := exec.Command(cmd, args...).Start()
+	if err == nil {
+		return
+	}
+}
+
+func getUserInput(results []Result) {
+	var response int
+	fmt.Println("Enter a result's number to be taken to the result in your browser")
+	_, _ = fmt.Scanln(&response)
+	openBrowser(results[response-1].Link)
+}
+
 func printResults(results []Result) {
 	for i := range results {
+		// if/else for formatting purposes
 		if i == len(results) - 1 {
-			fmt.Println(results[i].Title, " | ", results[i].Link)
+			fmt.Printf("[%d] ", i + 1)
+			fmt.Println(results[i].Title, " <|> ", results[i].Link)
 		} else {
-			fmt.Println(results[i].Title, " | ", results[i].Link, "\n")
+			fmt.Printf("[%d] ", i + 1)
+			fmt.Println(results[i].Title, " <|> ", results[i].Link, "\n")
 		}
 	}
 }
@@ -63,26 +93,48 @@ func cleanLink(dirtyLink string) string {
 	return cleanLink
 }
 
-/* TODO complete
-func searchExact(query string) {}
-
-func searchTitle(query string) {}
-
-func searchURL(query string)  {}
-
-func searchNews(query string) {}
-
-func searchMaps(query string) {}
-*/
-
-
-// parses the query given as a string
-func parseQuery(args []string) string {
-	query := fmt.Sprintf(strings.Join(args[:], " "))
+func buildSiteQuery(args []string, site string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " ") + " site:" + site)
 
 	return query
 }
 
+func buildMapQuery(args []string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " ") + " map")
+
+	return query
+}
+
+func buildNewsQuery(args []string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " ") + " news")
+
+	return query
+}
+
+func buildInURLQuery(args []string) string {
+	query := fmt.Sprintf("inurl:" + strings.Join(args[:], " "))
+
+	return query
+}
+
+func buildInTitleQuery(args []string) string {
+	query := fmt.Sprintf("intitle:" + strings.Join(args[:], " "))
+
+	return query
+}
+
+func buildExactQuery(args []string) string {
+	query := fmt.Sprintf(strconv.Quote(strings.Join(args[:], " ")))
+
+	return query
+}
+
+// parses the query given as a string
+func buildDefaultQuery(args []string) string {
+	query := fmt.Sprintf(strings.Join(args[:], " "))
+
+	return query
+}
 
 // generates a URL from the query given
 func generateURL(query string) *url.URL {
@@ -113,40 +165,40 @@ var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Use this command to supply a query",
 	Long: `This command is what you will use to search DuckDuckGo. Simply enter what you wish to search following the search command and duck will query for you. Output will be the first 10 link results, structured as such:
-[0] PAGE TITLE : LINK
+[0] PAGE TITLE ||| LINK
 To visit a link, simply press the number corresponding with the link.
-There are a number of flags available to fine-tune search results.`,
+There are a number of flags available to fine-tune search results.
+Seeing as you are searching DuckDuckGo, duck provides no assurance that your search results will be accurate.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		/*
 		exactSwitch, _ 		:= cmd.Flags().GetBool("exact")
-		siteSwitch, _ 		:= cmd.Flags().GetString("site")
 		titleSwitch, _ 		:= cmd.Flags().GetBool("title")
 		urlSwitch, _ 		:= cmd.Flags().GetBool("url")
 		newsSwitch, _ 		:= cmd.Flags().GetBool("news")
 		mapSwitch, _ 		:= cmd.Flags().GetBool("map")
-		*/
+		siteSwitch, _ 		:= cmd.Flags().GetString("site")
+
 		var query string
 
-		/*
 		switch {
 		case exactSwitch:
-			fmt.Println("exact")
+			query = buildExactQuery(args)
 		case titleSwitch:
-			fmt.Println("title")
+			query = buildInTitleQuery(args)
 		case urlSwitch:
-			fmt.Println("url")
+			query = buildInURLQuery(args)
 		case newsSwitch:
-			fmt.Println("news")
+			query = buildNewsQuery(args)
 		case mapSwitch:
-			fmt.Println("map")
+			query = buildMapQuery(args)
 		case siteSwitch != "":
-				fmt.Println(Site)
+			query = buildSiteQuery(args, Site)
+		default:
+			query = buildDefaultQuery(args)
 		}
-		*/
 
-		query 				= parseQuery(args)
-		url 				:= generateURL(query)
-		results 			:= search(url.String())
+		url := generateURL(query)
+		results := search(url.String())
 		printResults(results)
+		getUserInput(results)
 	},
 }
