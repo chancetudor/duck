@@ -6,9 +6,11 @@
 
 ### Available Commands:
 	help : Help about any command, like so:
-    	./duck help 
+    	./duck help
+	
     	Use "duck [command] --help" for more information about a command, like so:
       		./duck search help
+		
   	search : Use this command to supply a query, like so:
     	./duck search cats
 
