@@ -2,7 +2,7 @@
 ## CLI to search DuckDuckGo. Written in Go (for practice and punniness).
 
 ### Usage:
-	- ./duck [command] 
+	./duck [command] 
 
 ### Available Commands:
 	help : Help about any command, like so:
