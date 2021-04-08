@@ -9,7 +9,7 @@
     	- Example: ./duck help 
     	- Use "duck [command] --help" for more information about a command.
       	- ./duck search help
-  	- - search : Use this command to supply a query
+  	- search : Use this command to supply a query
     	- ./duck search cats
 
 ### Global Flags:
