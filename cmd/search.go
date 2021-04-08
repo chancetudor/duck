@@ -4,7 +4,7 @@
 Licensed under GPL v3.0 -- https://www.gnu.org/licenses/gpl-3.0.en.html
 View the code, edit the code, run the code
 
- */
+*/
 package cmd
 
 import (
@@ -25,7 +25,7 @@ var Site string
 // this is a struct to store a result containing a Title and Link to print to stdio
 type Result struct {
 	Title string
-	Link string
+	Link  string
 }
 
 func openBrowser(url string) {
@@ -41,27 +41,35 @@ func openBrowser(url string) {
 	default: // "linux", "freebsd", "openbsd", "netbsd"
 		cmd = "xdg-open"
 	}
-	err := exec.Command(cmd, args...).Start()
-	if err == nil {
-		return
+	err := exec.Command(cmd, args...).Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
-func getUserInput(results []Result) {
+func visit(results []Result) {
 	var response int
-	fmt.Println("Enter a result's number to be taken to the result in your browser")
-	_, _ = fmt.Scanln(&response)
+	for {
+		fmt.Println("Enter a result's number to be taken to the result in your browser")
+		_, _ = fmt.Scanln(&response)
+		if response > len(results) || response < 1 {
+			fmt.Println("Sorry, but that isn't an option")
+		} else {
+			fmt.Println("Visiting:", results[response-1].Title)
+			break
+		}
+	}
 	openBrowser(results[response-1].Link)
 }
 
 func printResults(results []Result) {
 	for i := range results {
 		// if/else for formatting purposes
-		if i == len(results) - 1 {
-			fmt.Printf("[%d] ", i + 1)
+		if i == len(results)-1 {
+			fmt.Printf("[%d] ", i+1)
 			fmt.Println(results[i].Title, " <|> ", results[i].Link)
 		} else {
-			fmt.Printf("[%d] ", i + 1)
+			fmt.Printf("[%d] ", i+1)
 			fmt.Println(results[i].Title, " <|> ", results[i].Link, "\n")
 		}
 	}
@@ -77,7 +85,10 @@ func search(url string) []Result {
 			results = append(results, Result{title, link})
 		}
 	})
-	_ = collect.Visit(url)
+	err := collect.Visit(url)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return results
 }
@@ -138,11 +149,11 @@ func buildDefaultQuery(args []string) string {
 
 // generates a URL from the query given
 func generateURL(query string) *url.URL {
-	baseUrl, _ 				:= url.Parse("https://html.duckduckgo.com")
+	baseUrl, _ := url.Parse("https://html.duckduckgo.com")
 	baseUrl.Path += "/html"
-	params 					:= url.Values{}
+	params := url.Values{}
 	params.Add("q", query)
-	baseUrl.RawQuery 		= params.Encode()
+	baseUrl.RawQuery = params.Encode()
 
 	return baseUrl
 }
@@ -164,18 +175,20 @@ func init() {
 var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Use this command to supply a query",
-	Long: `This command is what you will use to search DuckDuckGo. Simply enter what you wish to search following the search command and duck will query for you. Output will be the first 10 link results, structured as such:
-[0] PAGE TITLE ||| LINK
-To visit a link, simply press the number corresponding with the link.
+	Long: `This command is what you will use to search DuckDuckGo. Simply enter what you wish to search following the search command and duck will query for you. Output will be structured as such:
+
+[0] PAGE TITLE <|> LINK
+
+To visit a link, simply enter the number corresponding with the link.
 There are a number of flags available to fine-tune search results.
 Seeing as you are searching DuckDuckGo, duck provides no assurance that your search results will be accurate.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		exactSwitch, _ 		:= cmd.Flags().GetBool("exact")
-		titleSwitch, _ 		:= cmd.Flags().GetBool("title")
-		urlSwitch, _ 		:= cmd.Flags().GetBool("url")
-		newsSwitch, _ 		:= cmd.Flags().GetBool("news")
-		mapSwitch, _ 		:= cmd.Flags().GetBool("map")
-		siteSwitch, _ 		:= cmd.Flags().GetString("site")
+		exactSwitch, _ := cmd.Flags().GetBool("exact")
+		titleSwitch, _ := cmd.Flags().GetBool("title")
+		urlSwitch, _ := cmd.Flags().GetBool("url")
+		newsSwitch, _ := cmd.Flags().GetBool("news")
+		mapSwitch, _ := cmd.Flags().GetBool("map")
+		siteSwitch, _ := cmd.Flags().GetString("site")
 
 		var query string
 
@@ -199,6 +212,6 @@ Seeing as you are searching DuckDuckGo, duck provides no assurance that your sea
 		url := generateURL(query)
 		results := search(url.String())
 		printResults(results)
-		getUserInput(results)
+		visit(results)
 	},
 }
